@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  server:
+    container_name: magnum_opus-server
+    build: server
+    volumes:
+        - './server:/server'
+        - '/server/node_modules'
+    ports:
+    - 5000:5000
+  client:
+    container_name: magnum_opus-client
+    build: client
+    volumes:
+      - './client:/client'
+      - '/client/node_modules'
+    ports:
+      - 3000:3000
+    links:
+      - server
