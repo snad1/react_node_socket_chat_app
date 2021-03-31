@@ -237,8 +237,8 @@ function App() {
       </RightContainer>
     </Container>):
       <Login>
-        Loading...
-        {/*<button onClick={() => loginWithRedirect()}>Log In</button>*/}
+        Logging you in, if taking long please click
+        <button style={{color: 'blue'}} onClick={() => loginWithRedirect()}>here</button>
       </Login>
   );
 }
