@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
 import {Container,LeftContainer,Tabs,Tab,UsersContainer,UserOnline,UserImage,UserDetails,RightContainer,
-  TopNav,ChatContainer,Bottom,Input,SendButton,LogoutButton,Message,Login,BlockButton,UnBlockButton} from "./styles";
+  TopNav,ChatContainer,Bottom,Input,SendButton,LogoutButton,Message,Login,BlockButton,UnBlockButton,TopLeft} from "./styles";
 import io from "socket.io-client";
 import config from "./config";
 import {IUser, IMessage, IRoom, IBlockerUser} from "./interface";
@@ -9,7 +9,7 @@ import {IUser, IMessage, IRoom, IBlockerUser} from "./interface";
 let socket: SocketIOClient.Socket;
 
 function App() {
-  const { loginWithRedirect,logout,user,isAuthenticated } = useAuth0();
+  const { loginWithRedirect,logout,user,isAuthenticated,loginWithPopup } = useAuth0();
   const [desc,setDesc] = useState('')
   const [messages,setMessages] = useState<IMessage[]>([])
   const [currentUser, setCurrentUser] = useState<IUser|any>(null);
@@ -20,17 +20,11 @@ function App() {
   const [activeUser,setActiveUser] = useState<IUser|any>(null);
   const [rooms,setRooms] = useState<IRoom[]>([])
   const [activeTab,setActiveTab] = useState('users')
+  const [disappear,setDisappear] = useState(false)
 
   useEffect(()=>{
     if(isAuthenticated){
-      window.addEventListener("blur", (ev) => {
-        console.log('blur addEventListener')
-      })
-      window.addEventListener("unload", (ev) =>
-      {
-        ev.preventDefault();
-        return ev.returnValue
-      });
+
       setCurrentUser({...user} as IUser)
 
       socket = io(config.endpoint);
@@ -72,19 +66,46 @@ function App() {
       socket.on('message', (message:IMessage) => {
         setMessages(messages => [ ...messages, message]);
       });
-      window.addEventListener("focus", (ev) => {
-        if (!socket.connected){
-          socket.connect()
-          console.log('focus addEventListener')
-        }
-      })
-      window.addEventListener("blur", (ev) => {
-        socket.disconnect()
-        console.log('blur addEventListener')
-      })
+
+
 
     }
+    else {
+      loginWithPopup()
+    }
   },[isAuthenticated])
+
+  useEffect(()=>{
+    if(disappear){
+      console.log(disappear)
+    window.addEventListener("blur", handleBlur)
+      if(isAuthenticated){
+        window.addEventListener("focus", handleFocus)
+      }
+    }
+    return ()=>{
+      if(disappear){
+        window.removeEventListener("blur", handleBlur)
+
+        if(isAuthenticated){
+          window.removeEventListener("focus", handleFocus)
+        }
+      }
+
+    }
+  },[disappear])
+
+  const handleFocus = () =>{
+    if (!socket.connected){
+      socket.connect()
+      socket.emit('join', { ...user});
+    }
+  }
+
+  const handleBlur = () =>{
+    socket.disconnect()
+    console.log('blur addEventListener',disappear)
+  }
 
   const startRoomChat = (user:IUser)=>{
     const ch = [String(currentUser.email+user.email),String(user.email+currentUser.email)]
@@ -142,6 +163,15 @@ function App() {
     isAuthenticated ? (
     <Container>
       <LeftContainer>
+        <TopLeft>
+          <p>{currentUser?.name}</p>
+          <div>
+            <label htmlFor="disapper">Disappear when leaving window</label>
+            <input type="checkbox" defaultChecked={disappear}
+                   onChange={(e)=>setDisappear(e.target.checked)}
+            />
+          </div>
+        </TopLeft>
         <Tabs>
           <Tab active={activeTab==='users'} onClick={()=>handleTab('users')}>Users Online</Tab>
           <Tab active={activeTab==='emails'} onClick={()=>handleTab('emails')}>Emails</Tab>
@@ -206,7 +236,10 @@ function App() {
 
       </RightContainer>
     </Container>):
-      <Login><button onClick={() => loginWithRedirect()}>Log In</button></Login>
+      <Login>
+        Loading...
+        {/*<button onClick={() => loginWithRedirect()}>Log In</button>*/}
+      </Login>
   );
 }
 

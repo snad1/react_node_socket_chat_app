@@ -149,3 +149,7 @@ export const Login = styled.div`
   height: 100vh;
   justify-content: center;
 `
+export const TopLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+`
