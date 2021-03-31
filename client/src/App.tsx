@@ -202,7 +202,7 @@ function App() {
           {getBlockUsers().length > 0 ? getBlockUsers().map(value => <UserOnline key={value.email}>
             <UserDetails>
               {value.name} <UnBlockButton onClick={()=>unBlockUser(value.email)}>
-              Block
+              Unblock
             </UnBlockButton>
             </UserDetails>
           </UserOnline>): 'No blocked users'}
