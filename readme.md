@@ -14,6 +14,7 @@ Open server folder install node packages and start backend server, Run command i
 ```
 npm install
 npm run build
+npm run start
 ```
 
 And finally open client folder install node packages and start frontend server, Run command in terminal
